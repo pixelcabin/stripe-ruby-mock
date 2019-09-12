@@ -147,7 +147,7 @@ module StripeMock
           amount: payment_intent[:amount],
           currency: payment_intent[:currency],
           payment_method: payment_intent[:payment_method],
-          payment_method_details: { payment_method.type => payment_method[payment_method.type] },
+          payment_method_details: { payment_method[:type].to_sym => payment_method[payment_method[:type]] },
           payment_intent: payment_intent[:id],
           paid: true
         )
