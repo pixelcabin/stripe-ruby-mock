@@ -144,6 +144,7 @@ module StripeMock
           id: id,
           customer: payment_intent[:customer],
           amount: payment_intent[:amount],
+          currency: payment_intent[:currency],
           payment_method: payment_intent[:payment_method],
           payment_intent: payment_intent[:id],
           paid: true
