@@ -141,14 +141,13 @@ module StripeMock
       def create_charge(payment_intent)
         id = new_id('ch')
         payment_method = payment_methods[payment_intent[:payment_method]]
-        binding.pry
         charges[id] = Data.mock_charge(
           id: id,
           customer: payment_intent[:customer],
           amount: payment_intent[:amount],
           currency: payment_intent[:currency],
           payment_method: payment_intent[:payment_method],
-          payment_method_details: { payment_method[:type].to_sym => payment_method[payment_method[:type]] },
+          payment_method_details: { payment_method[:type].to_sym => payment_method[payment_method[:type].to_sym] },
           payment_intent: payment_intent[:id],
           paid: true
         )
