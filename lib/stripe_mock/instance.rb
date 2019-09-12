@@ -51,7 +51,7 @@ module StripeMock
     include StripeMock::RequestHandlers::TaxRates
 
     attr_reader :accounts, :balance, :balance_transactions, :bank_tokens, :charges, :coupons, :customers,
-                :disputes, :events, :invoices, :invoice_items, :orders, :payment_intents, :setup_intents,
+                :disputes, :events, :invoices, :invoice_items, :orders, :payment_intents, :setup_intents, :payment_methods,
                 :plans, :recipients, :refunds, :transfers, :payouts, :subscriptions, :country_spec,
                 :subscriptions_items, :products, :tax_rates
 
