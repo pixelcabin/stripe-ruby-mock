@@ -4,13 +4,13 @@ module StripeMock
       ALLOWED_PARAMS = [:description, :metadata, :receipt_email, :shipping, :destination, :payment_method, :payment_method_types, :setup_future_usage, :transfer_data, :amount, :currency]
 
       def PaymentIntents.included(klass)
-        klass.add_handler 'post /v1/payment_intents',               :new_payment_intent
-        klass.add_handler 'get /v1/payment_intents',                :get_payment_intents
-        klass.add_handler 'get /v1/payment_intents/(.*)',           :get_payment_intent
-        klass.add_handler 'post /v1/payment_intents/(.*)/confirm',  :confirm_payment_intent
-        klass.add_handler 'post /v1/payment_intents/(.*)/capture',  :capture_payment_intent
-        klass.add_handler 'post /v1/payment_intents/(.*)/cancel',   :cancel_payment_intent
-        klass.add_handler 'post /v1/payment_intents/(.*)',          :update_payment_intent
+        klass.add_handler 'post /v1/payment_intents', :new_payment_intent
+        klass.add_handler 'get /v1/payment_intents', :get_payment_intents
+        klass.add_handler 'get /v1/payment_intents/(.*)', :get_payment_intent
+        klass.add_handler 'post /v1/payment_intents/(.*)/confirm', :confirm_payment_intent
+        klass.add_handler 'post /v1/payment_intents/(.*)/capture', :capture_payment_intent
+        klass.add_handler 'post /v1/payment_intents/(.*)/cancel', :cancel_payment_intent
+        klass.add_handler 'post /v1/payment_intents/(.*)', :update_payment_intent
       end
 
       def new_payment_intent(route, method_url, params, headers)
@@ -41,7 +41,7 @@ module StripeMock
           payment_intent[:payment_method] = params[:payment_method]
           payment_intent[:status] = 'requires_confirmation'
         end
-        payment_intents[$1] = Util.rmerge(payment_intent, params.select{ |k,v| ALLOWED_PARAMS.include?(k)})
+        payment_intents[$1] = Util.rmerge(payment_intent, params.select { |k, v| ALLOWED_PARAMS.include?(k) })
       end
 
       def get_payment_intents(route, method_url, params, headers)
@@ -51,7 +51,7 @@ module StripeMock
         clone = payment_intents.clone
 
         if params[:customer]
-          clone.delete_if { |k,v| v[:customer] != params[:customer] }
+          clone.delete_if { |k, v| v[:customer] != params[:customer] }
         end
 
         Data.mock_list_object(clone.values, params)
@@ -140,12 +140,14 @@ module StripeMock
 
       def create_charge(payment_intent)
         id = new_id('ch')
+        payment_method = payment_methods[payment_intent[:payment_method]]
         charges[id] = Data.mock_charge(
           id: id,
           customer: payment_intent[:customer],
           amount: payment_intent[:amount],
           currency: payment_intent[:currency],
           payment_method: payment_intent[:payment_method],
+          payment_method_details: { payment_method.type => payment_method[payment_method.type] },
           payment_intent: payment_intent[:id],
           paid: true
         )
