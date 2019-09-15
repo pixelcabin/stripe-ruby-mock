@@ -77,6 +77,10 @@ module StripeMock
         route =~ method_url
         setup_intent = assert_existence :setup_intent, $1, setup_intents[$1]
 
+        if params[:payment_method_options][:card].present?
+          setup_intent[:payment_method_options][:card].merge!(params[:payment_method_options][:card])
+        end
+        
         setup_intent[:status] = 'succeeded'
         setup_intent
       end
