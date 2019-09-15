@@ -1211,7 +1211,7 @@ module StripeMock
         :on_behalf_of => nil,
         :payment_method => nil,
         :payment_method_options => {
-          "card": {"request_three_d_secure":"automatic"}.merge(params[:payment_method_options].try(:[], :card) || {})
+          "card": {"request_three_d_secure":"automatic"}
         },
         :payment_method_types => ["card"],
         :status => "requires_payment_method",
