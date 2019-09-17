@@ -29,7 +29,7 @@ module StripeMock
           params[:default_source] = sources.first[:id]
         end
 
-        customers[ params[:id] ] = Data.mock_customer(sources, params)
+        customers[params[:id]] = Data.mock_customer(sources, params)
 
         if params[:plan]
           plan_id = params[:plan].to_s
@@ -40,21 +40,21 @@ module StripeMock
           end
 
           subscription = Data.mock_subscription({ id: new_id('su') })
-          subscription = resolve_subscription_changes(subscription, [plan], customers[ params[:id] ], params)
-          add_subscription_to_customer(customers[ params[:id] ], subscription)
+          subscription = resolve_subscription_changes(subscription, [plan], customers[params[:id]], params)
+          add_subscription_to_customer(customers[params[:id]], subscription)
           subscriptions[subscription[:id]] = subscription
         elsif params[:trial_end]
           raise Stripe::InvalidRequestError.new('Received unknown parameter: trial_end', nil, http_status: 400)
         end
 
         if params[:coupon]
-          coupon = coupons[ params[:coupon] ]
+          coupon = coupons[params[:coupon]]
           assert_existence :coupon, params[:coupon], coupon
 
           add_coupon_to_object(customers[params[:id]], coupon)
         end
 
-        customers[ params[:id] ]
+        customers[params[:id]]
       end
 
       def update_customer(route, method_url, params, headers)
@@ -67,10 +67,10 @@ module StripeMock
         params.delete(:invoice_settings) if params[:invoice_settings] && params[:invoice_settings] == {} # There should be blank? check
         # Delete those params if their values aren't valid. Workaround of the problematic way Stripe serialize objects
         if params[:sources] && !params[:sources][:data].nil?
-          params.delete(:sources) unless params[:sources][:data].any?{ |v| !!v[:type]}
+          params.delete(:sources) unless params[:sources][:data].any? { |v| !!v[:type] }
         end
         if params[:subscriptions] && !params[:subscriptions][:data].nil?
-          params.delete(:subscriptions) unless params[:subscriptions][:data].any?{ |v| !!v[:type]}
+          params.delete(:subscriptions) unless params[:subscriptions][:data].any? { |v| !!v[:type] }
         end
         cus.merge!(params)
 
@@ -88,7 +88,7 @@ module StripeMock
         end
 
         if params[:coupon]
-          coupon = coupons[ params[:coupon] ]
+          coupon = coupons[params[:coupon]]
           assert_existence :coupon, params[:coupon], coupon
 
           add_coupon_to_object(cus, coupon)
@@ -122,7 +122,16 @@ module StripeMock
       end
 
       def list_customers(route, method_url, params, headers)
-        Data.mock_list_object(customers.values, params)
+        params[:offset] ||= 0
+        params[:limit] ||= 10
+
+        result = customers.clone
+
+        if params[:customer]
+          result.delete_if { |_, v| v[:email] != params[:email] }
+        end
+
+        Data.mock_list_object(result.values, params)
       end
 
       def delete_customer_discount(route, method_url, params, headers)
