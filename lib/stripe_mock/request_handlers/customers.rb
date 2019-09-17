@@ -127,7 +127,7 @@ module StripeMock
 
         result = customers.clone
 
-        if params[:customer]
+        if params[:email]
           result.delete_if { |_, v| v[:email] != params[:email] }
         end
 
