@@ -19,6 +19,17 @@ module StripeMock
 
         ensure_payment_intent_required_params(params)
 
+        status = case params[:amount]
+        when 3184 then
+          'requires_action'
+        when 3178 then
+          'requires_payment_method'
+        when 3055 then
+          'requires_capture'
+        else
+          'succeeded'
+        end
+        last_payment_error = params[:amount] == 3178 ? last_payment_error_generator(code: 'card_declined', decline_code: 'insufficient_funds', message: 'Not enough funds.') : nil
         payment_intents[id] = Data.mock_payment_intent(
           params.merge(
             id: id,
@@ -30,7 +41,12 @@ module StripeMock
         invoices[params[:invoice]][:payment_intent] = id if params[:invoice]
 
         confirm_intent(payment_intents[id]) if params[:confirm]
-        payment_intents[id]
+
+        if params[:confirm] && status == 'succeeded'
+          payment_intents[id] = succeeded_payment_intent(payment_intents[id])
+        end
+
+        payment_intents[id].clone
       end
 
       def update_payment_intent(route, method_url, params, headers)
@@ -70,8 +86,7 @@ module StripeMock
         route =~ method_url
         payment_intent = assert_existence :payment_intent, $1, payment_intents[$1]
 
-        payment_intent[:status] = 'succeeded'
-        payment_intent
+        succeeded_payment_intent(payment_intent)
       end
 
       def confirm_payment_intent(route, method_url, params, headers)
@@ -83,6 +98,7 @@ module StripeMock
           payment_intent[:status] = 'requires_confirmation'
         end
         confirm_intent(payment_intent)
+        succeeded_payment_intent(payment_intent)
       end
 
       def cancel_payment_intent(route, method_url, params, headers)
@@ -160,6 +176,70 @@ module StripeMock
 
       def non_positive_charge_amount?(params)
         params[:amount] && params[:amount] < 1
+      end
+
+      def last_payment_error_generator(code: nil, message: nil, decline_code: nil)
+        {
+          code: code,
+          doc_url: "https://stripe.com/docs/error-codes/payment-intent-authentication-failure",
+          message: message,
+          decline_code: decline_code,
+          payment_method: {
+            id: "pm_1EwXFA2eZvKYlo2C0tlY091l",
+            object: "payment_method",
+            billing_details: {
+              address: {
+                city: nil,
+                country: nil,
+                line1: nil,
+                line2: nil,
+                postal_code: nil,
+                state: nil
+              },
+              email: nil,
+              name: "seller_08072019090000",
+              phone: nil
+            },
+            card: {
+              brand: "visa",
+              checks: {
+                address_line1_check: nil,
+                address_postal_code_check: nil,
+                cvc_check: "unchecked"
+              },
+              country: "US",
+              exp_month: 12,
+              exp_year: 2021,
+              fingerprint: "LQBhEmJnItuj3mxf",
+              funding: "credit",
+              generated_from: nil,
+              last4: "1629",
+              three_d_secure_usage: {
+                supported: true
+              },
+              wallet: nil
+            },
+            created: 1563208900,
+            customer: nil,
+            livemode: false,
+            metadata: {},
+            type: "card"
+          },
+          type: "invalid_request_error"
+        }
+      end
+
+      def succeeded_payment_intent(payment_intent)
+        payment_intent[:status] = 'succeeded'
+        btxn = new_balance_transaction('txn', { source: payment_intent[:id] })
+
+        payment_intent[:charges][:data] << Data.mock_charge(
+          balance_transaction: btxn,
+          amount: payment_intent[:amount],
+          currency: payment_intent[:currency]
+        )
+
+        payment_intent
       end
     end
   end

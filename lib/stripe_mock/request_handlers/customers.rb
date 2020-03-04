@@ -50,7 +50,6 @@ module StripeMock
         if params[:coupon]
           coupon = coupons[params[:coupon]]
           assert_existence :coupon, params[:coupon], coupon
-
           add_coupon_to_object(customers[params[:id]], coupon)
         end
 
@@ -60,6 +59,10 @@ module StripeMock
       def update_customer(route, method_url, params, headers)
         route =~ method_url
         cus = assert_existence :customer, $1, customers[$1]
+
+        # get existing and pending metadata
+        metadata = cus.delete(:metadata) || {}
+        metadata_updates = params.delete(:metadata) || {}
 
         # Delete those params if their value is nil. Workaround of the problematic way Stripe serialize objects
         params.delete(:sources) if params[:sources] && params[:sources][:data].nil?
@@ -73,6 +76,7 @@ module StripeMock
           params.delete(:subscriptions) unless params[:subscriptions][:data].any? { |v| !!v[:type] }
         end
         cus.merge!(params)
+        cus[:metadata] = {**metadata, **metadata_updates}
 
         if params[:source]
           if params[:source].is_a?(String)
@@ -88,10 +92,13 @@ module StripeMock
         end
 
         if params[:coupon]
-          coupon = coupons[params[:coupon]]
-          assert_existence :coupon, params[:coupon], coupon
-
-          add_coupon_to_object(cus, coupon)
+          if params[:coupon] == ''
+            delete_coupon_from_object(cus)
+          else
+            coupon = coupons[params[:coupon]]
+            assert_existence :coupon, params[:coupon], coupon
+            add_coupon_to_objectlib/stripe_mock/request_handlers/customers.rb(cus, coupon)
+          end
         end
 
         cus

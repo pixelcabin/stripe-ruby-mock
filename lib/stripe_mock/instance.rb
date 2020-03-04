@@ -21,6 +21,7 @@ module StripeMock
     end
 
     include StripeMock::RequestHandlers::PaymentIntents
+    include StripeMock::RequestHandlers::PaymentMethods
     include StripeMock::RequestHandlers::SetupIntents
     include StripeMock::RequestHandlers::ExternalAccounts
     include StripeMock::RequestHandlers::Accounts
@@ -49,11 +50,12 @@ module StripeMock
     include StripeMock::RequestHandlers::Payouts
     include StripeMock::RequestHandlers::EphemeralKey
     include StripeMock::RequestHandlers::TaxRates
+    include StripeMock::RequestHandlers::Checkout
 
     attr_reader :accounts, :balance, :balance_transactions, :bank_tokens, :charges, :coupons, :customers,
-                :disputes, :events, :invoices, :invoice_items, :orders, :payment_intents, :setup_intents, :payment_methods,
-                :plans, :recipients, :refunds, :transfers, :payouts, :subscriptions, :country_spec,
-                :subscriptions_items, :products, :tax_rates
+                :disputes, :events, :invoices, :invoice_items, :orders, :payment_intents, :payment_methods,
+                :setup_intents, :plans, :recipients, :refunds, :transfers, :payouts, :subscriptions, :country_spec,
+                :subscriptions_items, :products, :tax_rates, :checkout_sessions
 
     attr_accessor :error_queue, :debug, :conversion_rate, :account_balance
 
@@ -74,6 +76,7 @@ module StripeMock
       @invoices = {}
       @invoice_items = {}
       @orders = {}
+      @payment_methods = {}
       @plans = {}
       @products = {}
       @recipients = {}
@@ -84,6 +87,7 @@ module StripeMock
       @subscriptions_items = {}
       @country_spec = {}
       @tax_rates = {}
+      @checkout_sessions = {}
 
       @debug = false
       @error_queue = ErrorQueue.new
